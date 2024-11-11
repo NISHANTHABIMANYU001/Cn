@@ -1,0 +1,88 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.Socket;
+
+public class HTTPWebClient {
+
+    private String host;
+    private int port = 80;  // Standard HTTP port
+    private String page;
+
+    // Constructor to initialize host and page
+    public HTTPWebClient(String host, String page) {
+        this.host = host;
+        this.page = page;
+    }
+
+    // Method to establish the connection and download webpage
+    public void downloadPage() {
+        try {
+            // Step 1: Setup the connection to the server
+            setupConnection();
+
+            // Step 2: Send HTTP GET request
+            sendRequest();
+
+            // Step 3: Receive and display the response
+            receiveResponse();
+
+            // Step 4: Close the connection
+            closeConnection();
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    // Step 1: Setup connection
+    private Socket socket;
+    private void setupConnection() throws Exception {
+        System.out.println("Connecting to " + host + " on port " + port);
+        socket = new Socket(host, port);
+    }
+
+    // Step 2: Send HTTP GET request
+    private void sendRequest() throws Exception {
+        OutputStream outStream = socket.getOutputStream();
+        PrintWriter out = new PrintWriter(outStream, true);
+        
+        // Formulate the HTTP GET request
+        String request = "GET " + page + " HTTP/1.1\r\n" +
+                         "Host: " + host + "\r\n" +
+                         "Connection: close\r\n\r\n";
+        out.print(request);
+        out.flush();
+        
+        System.out.println("Request sent:\n" + request);
+    }
+
+    // Step 3: Receive and display the response
+    private void receiveResponse() throws Exception {
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        String line;
+        System.out.println("Response received:");
+        while ((line = in.readLine()) != null) {
+            System.out.println(line);
+        }
+    }
+
+    // Step 4: Close the connection
+    private void closeConnection() throws Exception {
+        if (socket != null && !socket.isClosed()) {
+            socket.close();
+            System.out.println("Connection closed.");
+        }
+    }
+
+    // Main method to execute the program
+    public static void main(String[] args) {
+        // Set the host and page (URL path) to download
+        String host = "example.com";  // Host name of the website
+        String page = "/";            // Path of the webpage to download
+
+        // Create an instance of HTTPWebClient
+        HTTPWebClient client = new HTTPWebClient(host, page);
+        client.downloadPage();  // Download the webpage
+    }
+}
